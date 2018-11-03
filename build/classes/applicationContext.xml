@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.2.xsd
+		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.2.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.2.xsd">
+	<context:property-placeholder location="classpath:jdbc.properties"/>
+	
+	<bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource">
+		<property name="driverClass" value="${jdbc.driverClass}"/>
+		<property name="jdbcUrl" value="${jdbc.url}"/>
+		<property name="user" value="${jdbc.username}"/>
+		<property name="password" value="${jdbc.password}"/>
+		<property name="minPoolSize" value="5"></property>
+    	<property name="maxPoolSize" value="20"></property>
+    	<property name="checkoutTimeout" value="120"></property>
+    	<property name="idleConnectionTestPeriod" value="3000"></property>
+	</bean>
+
+	<bean id="sessionFactory" class="org.springframework.orm.hibernate5.LocalSessionFactoryBean">
+		<property name="dataSource" ref="dataSource"></property>
+		<property name="mappingDirectoryLocations" value="classpath:com/crm/domain"/>
+		<property name="hibernateProperties">
+			<map>
+				<entry key="hibernate.dialect" value="org.hibernate.dialect.MySQLDialect"/>
+                <entry key="hibernate.show_sql" value="true"/>
+                <entry key="hibernate.format_sql" value="true"/>
+                <entry key="hibernate.hbm2ddl.auto" value="update"/>
+                <!-- <entry key="hibernate.cache.use_second_level_cache" value="true"/>
+                <entry key="hibernate.search.default.directory_provider" value="org.hibernate.search.store.FSDirectoryProvider"/> -->
+			</map>
+		</property>
+	</bean>
+	
+	<context:component-scan base-package="com.crm"></context:component-scan>
+	<bean id="transactionManager" class="org.springframework.orm.hibernate5.HibernateTransactionManager">
+		<property name="sessionFactory" ref="sessionFactory"></property>
+	</bean>
+	<tx:annotation-driven transaction-manager="transactionManager"/>
+	<tx:advice id="myAdvice">
+		<tx:attributes>
+			<tx:method name="insert*" propagation="REQUIRED"/>
+			<tx:method name="update*" propagation="REQUIRED"/>
+			<tx:method name="delete*" propagation="REQUIRED"/>
+			<tx:method name="regist*" propagation="REQUIRED"/>
+			<tx:method name="save*" propagation="REQUIRED"/>
+			<tx:method name="find*" read-only="true"/>
+			<tx:method name="*" read-only="true"/>
+		</tx:attributes>
+	</tx:advice>
+	<aop:config>
+		<aop:advisor advice-ref="myAdvice" pointcut="execution(* com.crm.service.impl.*.*(..))"/>
+	</aop:config>
+	
+	<bean class="com.crm.web.action.UserAction" id="userAction" scope="prototype"/>
+	<bean class="com.crm.web.action.CustomerAction" id="customerAction" scope="prototype"/>
+	<bean class="com.crm.web.action.BaseDictAction" id="baseDictAction" scope="prototype"/>
+	<bean class="com.crm.web.action.LinkManAction" id="linkManAction" scope="prototype"/>
+	<bean class="com.crm.web.action.SaleVisitAction" id="saleVisitAction" scope="prototype"/>
+	
+	
+	<bean class="com.crm.service.impl.UserServiceImpl" id="userService"/>
+	<bean class="com.crm.service.impl.CustomerServiceImpl" id="customerService"/>
+	<bean class="com.crm.service.impl.BaseDictServiceImpl" id="baseDictService"/>
+	<bean class="com.crm.service.impl.LinkManServiceImpl" id="linkManService"/>
+	<bean class="com.crm.service.impl.SaleVisitServiceImpl" id="saleVisitService"/>
+	
+	
+	<bean class="com.crm.dao.impl.UserDaoImpl" id="userDao">
+		<property name="sessionFactory" ref="sessionFactory"></property>
+	</bean>
+	<bean class="com.crm.dao.impl.CustomerDaoImpl" id="customerDao">
+		<property name="sessionFactory" ref="sessionFactory"></property>
+	</bean>
+	<bean class="com.crm.dao.impl.BaseDictDaoImpl" id="baseDictDao">
+		<property name="sessionFactory" ref="sessionFactory"></property>
+	</bean>
+	<bean class="com.crm.dao.impl.LinkManDaoImpl" id="linkManDao">
+		<property name="sessionFactory" ref="sessionFactory"></property>
+	</bean>
+	<bean class="com.crm.dao.impl.SaleVisitDaoImpl" id="saleVisitDao">
+		<property name="sessionFactory" ref="sessionFactory"></property>
+	</bean>
+</beans>

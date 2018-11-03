@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE struts PUBLIC
+	"-//Apache Software Foundation//DTD Struts Configuration 2.3//EN"
+	"http://struts.apache.org/dtds/struts-2.3.dtd">
+<struts>
+	<constant name="struts.objectFactory" value="spring"/>
+	<!-- 开发模式（默认是生产模式） -->
+    <constant name="struts.devMode" value="true"></constant>
+    <!-- 去掉struts2的样式，struts2的ui标签，改成简单主题样式 -->
+    <constant name="struts.ui.theme" value="simple"></constant>
+    
+	<package name="crm" extends="json-default" namespace="/">
+		<!-- 1：定义拦截器 -->
+		<interceptors>
+			<interceptor name="privilegeInterceptor" class="com.crm.web.interceptor.PrivilegeInterceptor"/>
+		</interceptors>
+		
+
+		
+		<global-results>
+			<result name="login">login.jsp</result>
+		</global-results>
+		<action name="user_*" class="userAction" method="{1}">
+			<result name="homeSuccess">login.jsp</result>
+			<result name="success">index.jsp</result>
+			<result name="list" type="json">
+				<param name="includeProperties">\[\d+\]\.user_id,\[\d+\]\.user_name</param>
+			</result>
+			<!--2：执行拦截器 -->
+			<interceptor-ref name="defaultStack"/>
+			<interceptor-ref name="privilegeInterceptor">
+				<param name="excludeMethods">regist,login</param>
+			</interceptor-ref>
+		</action>
+		
+		<action name="customer_*" class="customerAction" method="{1}">
+			<result name="saveUI">/jsp/customer/add.jsp</result>
+			<result name="success" type="redirectAction" >customer_findByPage.action</result>
+			<result name="findByPage">/jsp/customer/list.jsp</result>
+			<result name="editUI">/jsp/customer/edit.jsp</result>
+			<result name="input">/jsp/customer/adderr.jsp</result>
+			<result name="download" type="stream">
+				<param name="contentType">${#request.contentType}</param>
+				<param name="inputName">inputStream</param>
+				<param name="contentDisposition">attachment;filename="${#request.filename}"</param>
+				<param name="bufferSize">1024</param>
+			</result>
+			<result name="list" type="json">
+				<param name="excludeProperties">\[\d+\]\.linkMans,\[\d+\]\.baseDictIndustry,\[\d+\]\.baseDictLevel,\[\d+\]\.baseDictSource</param>
+			</result>
+			<interceptor-ref name="defaultStack">
+				<!-- 限制文件上传大小30k*1024bate -->
+				<param name="fileUpload.maximumSize">2048000</param>
+				<!-- 限制文件的拓展名 -->
+				<param name="fileUpload.allowedExtensions">.jpg,.png</param>
+			</interceptor-ref>
+			<interceptor-ref name="defaultStack"/>
+			<interceptor-ref name="privilegeInterceptor"></interceptor-ref>
+		</action>
+		
+		<action name="baseDict_*" class="baseDictAction" method="{1}">
+			<interceptor-ref name="defaultStack"/>
+			<interceptor-ref name="privilegeInterceptor"></interceptor-ref>
+		</action>
+		
+		<action name="linkMan_*" class="linkManAction" method="{1}">
+			<result name="saveUI">/jsp/linkman/add.jsp</result>
+			<result name="list">/jsp/linkman/list.jsp</result>
+			<result name="success" type="redirectAction">linkMan_findByPage.action</result>
+			<result name="editUI">/jsp/linkman/edit.jsp</result>
+			<interceptor-ref name="defaultStack"/>
+			<interceptor-ref name="privilegeInterceptor"></interceptor-ref>
+		</action>
+		
+		<action name="saleVisit_*" class="saleVisitAction" method="{1}">
+			<result name="saveUI">/jsp/salevisit/add.jsp</result>
+			<result name="findByPage">/jsp/salevisit/list.jsp</result>
+			<result name="findAll" type="redirectAction">saleVisit_findByPage.action</result>
+			<result name="editUI">/jsp/salevisit/edit.jsp</result>
+			<!--2：执行拦截器 -->
+			<interceptor-ref name="defaultStack"/>
+			<interceptor-ref name="privilegeInterceptor"></interceptor-ref>
+		</action>
+		
+	</package>
+</struts>
